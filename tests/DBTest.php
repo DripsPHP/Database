@@ -16,5 +16,6 @@ class DBTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($db->isConnected());
         $result = $db->select("user", "*");
         $this->assertTrue($db->isConnected());
+        $this->assertEquals($db->does_not_exist, null);
     }
 }
