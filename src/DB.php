@@ -68,14 +68,22 @@ class DB extends Medoo implements IDataProvider
     public function __get($name)
     {
         if($name == "pdo"){
-            parent::__construct($this->options);
+            if(class_exists('\Propel\Runtime\Propel')){
+                $this->pdo = \Propel\Runtime\Propel::getServiceContainer()->getConnection('default')->getWrappedConnection();
+                if(@$this->options['database_type'] == 'mysql'){
+                    $this->pdo->exec('SET SQL_MODE=ANSI_QUOTES');
+                } elseif(@$this->options['database_type'] == 'mssql'){
+                    $this->pdo->exec('SET QUOTED_IDENTIFIER ON');
+                }
+            } else {
+                parent::__construct($this->options);
+            }
             if(isset($this->pdo)){
                 $this->connected = true;
             }
             return $this->pdo;
         }
     }
-
 
     public function isConnected()
     {
