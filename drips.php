@@ -5,8 +5,7 @@ use Drips\Config\Config;
 use Drips\Database\DB;
 
 if(class_exists('Drips\App')){
-    $app = App::getInstance();
-    App::on('create', function() use ($app){
+    App::on('create', function(App $app){
         $type = Config::get('database_type', 'mysql');
         $host = Config::get('database_host', 'localhost');
         $database = Config::get('database_name', 'drips');
