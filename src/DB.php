@@ -37,10 +37,11 @@ class DB extends Medoo implements IDataProvider
         }
         if(defined('DRIPS_DEBUG')){
             if(DRIPS_DEBUG){
-                $this->logger->pushHandler(new StreamHandler($this->logfile));
+		$this->logger->pushHandler(new Handler);
+	    } else {
+                $this->logger->pushHandler(new StreamHandler($this->logfile, Logger::WARNING));
             }
         }
-        $this->logger->pushHandler(new Handler);
     }
 
     public function query($query)
