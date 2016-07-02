@@ -47,7 +47,7 @@ class DB extends Medoo implements IDataProvider
     public function query($query)
     {
         $result = parent::query($query);
-        $this->logger->addDebug($query);
+        $this->logger->addInfo($query);
         if($result === false){
             $errors = $this->error();
             $this->logger->addCritical($errors[2]);
@@ -58,7 +58,7 @@ class DB extends Medoo implements IDataProvider
     public function exec($query)
     {
         $result = parent::exec($query);
-        $this->logger->addDebug($query);
+        $this->logger->addInfo($query);
         if($result === false){
             $errors = $this->error();
             $this->logger->addCritical($errors[2]);
