@@ -14,6 +14,7 @@ use Drips\Utils\IDataProvider;
 use Drips\Logger\Logger;
 use Drips\Logger\Handler;
 use Monolog\Handler\StreamHandler;
+use Drips\Config\Config;
 
 /**
  * Class DB.
@@ -31,25 +32,29 @@ class DB extends Medoo implements IDataProvider
     public function __construct(array $options)
     {
         $this->options = $options;
-        $this->logger = new Logger('database');
-        if(defined('DRIPS_LOGS')){
-            $this->logfile = DRIPS_LOGS.'/'.$this->logfile;
-        }
-        if(defined('DRIPS_DEBUG')){
-            if(DRIPS_DEBUG){
-                $this->logger->pushHandler(new StreamHandler($this->logfile));
+        if(Config::get('database_logging', true)){
+            $this->logger = new Logger('database');
+            if(defined('DRIPS_LOGS')){
+                $this->logfile = DRIPS_LOGS.'/'.$this->logfile;
             }
+            if(defined('DRIPS_DEBUG')){
+                if(DRIPS_DEBUG){
+                    $this->logger->pushHandler(new StreamHandler($this->logfile));
+                }
+            }
+            $this->logger->pushHandler(new Handler);
         }
-        $this->logger->pushHandler(new Handler);
     }
 
     public function query($query)
     {
         $result = parent::query($query);
-        $this->logger->addDebug($query);
-        if($result === false){
-            $errors = $this->error();
-            $this->logger->addCritical($errors[2]);
+        if(Config::get('database_logging', true)){
+            $this->logger->addDebug($query);
+            if($result === false){
+                $errors = $this->error();
+                $this->logger->addCritical($errors[2]);
+            }
         }
         return $result;
     }
@@ -57,10 +62,12 @@ class DB extends Medoo implements IDataProvider
     public function exec($query)
     {
         $result = parent::exec($query);
-        $this->logger->addDebug($query);
-        if($result === false){
-            $errors = $this->error();
-            $this->logger->addCritical($errors[2]);
+        if(Config::get('database_logging', true)){
+            $this->logger->addDebug($query);
+            if($result === false){
+                $errors = $this->error();
+                $this->logger->addCritical($errors[2]);
+            }
         }
         return $result;
     }
