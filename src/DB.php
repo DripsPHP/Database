@@ -32,6 +32,7 @@ class DB extends Medoo implements IDataProvider
     public function __construct(array $options)
     {
         $this->options = $options;
+
         if(Config::get('database_logging', true)){
             $this->logger = new Logger('database');
             if(defined('DRIPS_LOGS')){
@@ -39,10 +40,11 @@ class DB extends Medoo implements IDataProvider
             }
             if(defined('DRIPS_DEBUG')){
                 if(DRIPS_DEBUG){
-                    $this->logger->pushHandler(new StreamHandler($this->logfile));
+    		        $this->logger->pushHandler(new Handler);
+    	        } else {
+                    $this->logger->pushHandler(new StreamHandler($this->logfile, Logger::WARNING));
                 }
             }
-            $this->logger->pushHandler(new Handler);
         }
     }
 
@@ -50,7 +52,7 @@ class DB extends Medoo implements IDataProvider
     {
         $result = parent::query($query);
         if(Config::get('database_logging', true)){
-            $this->logger->addDebug($query);
+            $this->logger->addInfo($query);
             if($result === false){
                 $errors = $this->error();
                 $this->logger->addCritical($errors[2]);
@@ -63,7 +65,7 @@ class DB extends Medoo implements IDataProvider
     {
         $result = parent::exec($query);
         if(Config::get('database_logging', true)){
-            $this->logger->addDebug($query);
+            $this->logger->addInfo($query);
             if($result === false){
                 $errors = $this->error();
                 $this->logger->addCritical($errors[2]);
