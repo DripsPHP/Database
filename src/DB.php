@@ -1,93 +1,88 @@
 <?php
-
 /**
- * Created by Prowect
- * Author: Raffael Kessler
- * Date: 02.04.2016 - 13:37.
- * Copyright Prowect.
+ * Created by PhpStorm.
+ * User: raffael
+ * Date: 24.07.16
+ * Time: 11:40
  */
 
 namespace Drips\Database;
 
-use Medoo;
-use Drips\Utils\IDataProvider;
-use Drips\Logger\Logger;
-use Drips\Logger\Handler;
-use Monolog\Handler\StreamHandler;
-
 /**
- * Class DB.
+ * Class DB
  *
- * Datenbank-Komponente basierend auf dem Medoo-Framework.
- * Baut die Datenbankverbindung nur auf, wenn es auch wirklich notwendig ist
+ * Klasse zur Speicherung mehrerer Datenbankverbindungen, sodass diese von einer zentralen Stelle eingeholt werden können.
+ *
+ * @package Drips\Database
  */
-class DB extends Medoo implements IDataProvider
+abstract class DB
 {
-    private $options;
-    private $connected = false;
-    private $logger;
-    private $logfile = 'database.log';
+    /**
+     * Beinhaltet die einzelnen Datenbank-Verbindungen (Connection-Objekte).
+     *
+     * @var array
+     */
+    protected static $connections = array();
 
-    public function __construct(array $options)
+    /**
+     * Registriert eine neue Datenbank-Verbindung unter gegebenen Namen.
+     *
+     * @param $name
+     * @param Connection $connection
+     */
+    public static function setConnection($name, Connection $connection)
     {
-        $this->options = $options;
-        $this->logger = new Logger('database');
-        if(defined('DRIPS_LOGS')){
-            $this->logfile = DRIPS_LOGS.'/'.$this->logfile;
-        }
-        if(defined('DRIPS_DEBUG')){
-            if(DRIPS_DEBUG){
-		$this->logger->pushHandler(new Handler);
-	    } else {
-                $this->logger->pushHandler(new StreamHandler($this->logfile, Logger::WARNING));
+        static::$connections[$name] = $connection;
+    }
+
+    /**
+     * Prüft, ob eine Verbingung unter gegebenem Namen besteht.
+     *
+     * @param $name
+     *
+     * @return bool
+     */
+    public static function hasConnection($name)
+    {
+        return isset(static::$connections[$name]);
+    }
+
+    /**
+     * Liefert zurück, ob bereits Verbindungen registriert wurden oder nicht.
+     *
+     * @return bool
+     */
+    public static function hasConnections()
+    {
+        return count(static::$connections) > 0;
+    }
+
+    /**
+     * Liefert alle registrierten Verbindungen als Array zurück.
+     *
+     * @return array
+     */
+    public static function getConnections()
+    {
+        return static::$connections;
+    }
+
+    /**
+     * Liefert eine bestimmte Verbindungen oder die Erste (die registriert wurde) zurück, sofern diese existiert.
+     *
+     * @param null $name
+     *
+     * @return mixed|null
+     */
+    public static function getConnection($name = null)
+    {
+        if (static::hasConnections()) {
+            if ($name === null) {
+                return static::$connections[key(static::$connections)];
+            } elseif(static::hasConnection($name)){
+                return static::$connections[$name];
             }
         }
-    }
-
-    public function query($query)
-    {
-        $result = parent::query($query);
-        $this->logger->addInfo($query);
-        if($result === false){
-            $errors = $this->error();
-            $this->logger->addCritical($errors[2]);
-        }
-        return $result;
-    }
-
-    public function exec($query)
-    {
-        $result = parent::exec($query);
-        $this->logger->addInfo($query);
-        if($result === false){
-            $errors = $this->error();
-            $this->logger->addCritical($errors[2]);
-        }
-        return $result;
-    }
-
-    public function __get($name)
-    {
-        if($name == "pdo"){
-            if(class_exists('\Propel\Runtime\Propel')){
-                $this->pdo = \Propel\Runtime\Propel::getServiceContainer()->getConnection('default')->getWrappedConnection();
-                if(@$this->options['database_type'] == 'mysql'){
-                    $this->pdo->exec('SET SQL_MODE=ANSI_QUOTES');
-                } elseif(@$this->options['database_type'] == 'mssql'){
-                    $this->pdo->exec('SET QUOTED_IDENTIFIER ON');
-                }
-            } else {
-                parent::__construct($this->options);
-            }
-            if(isset($this->pdo)){
-                $this->connected = true;
-            }
-            return $this->pdo;
-        }
-    }
-
-    public function isConnected()
-    {
-        return $this->connected;
+        return null;
     }
 }

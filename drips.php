@@ -3,9 +3,10 @@
 use Drips\App;
 use Drips\Config\Config;
 use Drips\Database\DB;
+use Drips\Database\Connection;
 
-if(class_exists('Drips\App')){
-    App::on('create', function(App $app){
+if (class_exists('Drips\App')) {
+    App::on('create', function (App $app) {
         $type = Config::get('database_type', 'mysql');
         $host = Config::get('database_host', 'localhost');
         $database = Config::get('database_name', 'drips');
@@ -18,7 +19,7 @@ if(class_exists('Drips\App')){
             'database_type' => $type
         );
 
-        if($type == 'sqlite'){
+        if ($type == 'sqlite') {
             $config['database_file'] = $host;
         } else {
             $config['server'] = $host;
@@ -29,6 +30,6 @@ if(class_exists('Drips\App')){
             $config['charset'] = $charset;
         }
 
-        $app->db = new DB($config);
+        DB::setConnection('default', new Connection($config, true));
     });
 }
