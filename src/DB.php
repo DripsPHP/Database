@@ -8,6 +8,13 @@
 
 namespace Drips\Database;
 
+use Medoo;
+use Drips\Utils\IDataProvider;
+use Drips\Logger\Logger;
+use Drips\Logger\Handler;
+use Monolog\Handler\StreamHandler;
+use Drips\Config\Config;
+
 /**
  * Class DB
  *
